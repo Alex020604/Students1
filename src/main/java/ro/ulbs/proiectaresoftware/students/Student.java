@@ -17,7 +17,7 @@ public class Student {
     @Override
     public String toString() {
         /*return "Student{" + "numarMatricol=" + numarMatricol + ", prenume='" + prenume + '\'' + ", nume='" + nume + '\'' + ", formatieDeStudiu='" + formatieDeStudiu + '\'' + '}';*/
-        return String.format("%5d %10s %s %10s", numarMatricol, prenume, nume, formatieDeStudiu);
+        return String.format("%5s %10s %s %12s", numarMatricol, prenume, nume, formatieDeStudiu);
     }
 
     @Override
@@ -31,6 +31,7 @@ public class Student {
     public int hashCode() {
         return Objects.hash(prenume, nume, formatieDeStudiu);
     }
+
 }
 
 
