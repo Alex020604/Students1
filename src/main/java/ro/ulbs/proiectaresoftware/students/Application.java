@@ -50,27 +50,29 @@ public class Application {
     public static boolean prezent(Student student,Set <Student> studenti){
         return studenti.contains(student);
     }
-    public static void sortareNume(List<Student> studenti){
-        //studenti.sort((s1, s2) -> s1.nume.compareTo(s2.nume));
+    public static void sortareNume(List<Student> studenti) {
         Collections.sort(studenti, new Comparator<Student>() {
             @Override
             public int compare(Student s1, Student s2) {
                 return s1.nume.compareTo(s2.nume);
             }
-        }
+        });
     }
-    public static void sortarePrenumeGrupa(List<Student> studenti){
+
+    public static void sortarePrenumeGrupa(List<Student> studenti) {
         Collections.sort(studenti, new Comparator<Student>() {
             @Override
             public int compare(Student s1, Student s2) {
-                if(s1.formatieDeStudiu.equals(s2.formatieDeStudiu))
-                    return s1.formatieDeStudiu.compareTo(s2.formatieDeStudiu);
-                else  if(s1.formatieDeStudiu.equals(s2.formatieDeStudiu))
-                    return s1.nume.compareTo(s2.nume);
-                else if ( s1.formatieDeStudiu.equals(s2.formatieDeStudiu))
-                    return s1.prenume.compareTo(s2.prenume);
+
+                int cmp = s1.formatieDeStudiu.compareTo(s2.formatieDeStudiu);
+                if (cmp != 0) return cmp;
+
+                cmp = s1.nume.compareTo(s2.nume);
+                if (cmp != 0) return cmp;
+
+                return s1.prenume.compareTo(s2.prenume);
             }
-        }
+        });
     }
 
     public static List<Student> citesteStudentiDinCSV(String numeFisier) {
