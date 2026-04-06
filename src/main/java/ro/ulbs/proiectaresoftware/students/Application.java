@@ -19,6 +19,7 @@ public class Application {
         afisare(studenti);
 
     }
+    Map<Integer, List<Integer>> note=citireNote("note.CSV");
 
     private static List<Student> createLista() {
         List<Student> studenti=new ArrayList<>();
@@ -90,5 +91,42 @@ public class Application {
         }
         return studenti;
     }
+    public static Map<Integer, List<Integer>> citireNote(String numeFisier) {
+        Map<Integer, List<Integer>> note = new HashMap<>();
 
+        try (BufferedReader br = new BufferedReader(new FileReader(numeFisier))) {
+            String linie;
+
+            while ((linie = br.readLine()) != null) {
+                String[] c = linie.split(",");
+
+                int id = Integer.parseInt(c[0]);
+                int nota = Integer.parseInt(c[1]);
+
+
+                note.putIfAbsent(id, new ArrayList<>());
+
+
+                note.get(id).add(nota);
+            }
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        return note;
+    }
+    public static Integer getNota(Student student, Map<String, Integer> note) {
+        return note.get(student.getNumarMatricol());
+    }
+    private static Map<Student,Integer>mapareNote(Map<String, Integer> note,List<Student> lista) {
+        Map<Student, Integer> rezultat = new HashMap<>();
+
+        for (Student s : lista) {
+            String id = s.getNumarMatricol();
+            Integer nota = note.get(id);
+            rezultat.put(s, nota);
+        }
+        return rezultat;
+    }
 }
