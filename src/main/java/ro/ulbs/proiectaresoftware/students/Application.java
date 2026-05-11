@@ -4,7 +4,9 @@ import java.util.*;
 import java.util.List;
 import java.util.ArrayList;
 import java.io.*;
-
+import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import java.io.FileOutputStream;
 
 public class Application {
     public static void main(String[] args) {
@@ -18,6 +20,34 @@ public class Application {
         sortareNume(studenti);
         afisare(studenti);
 
+        Map<Integer, List<Integer>> note = citireNote("note.csv");
+
+        scrieInExcel("studenti_note.xlsx", studenti, note);
+        scrieRaportCSV("raport_final.csv", studenti, note);
+
+        export(studenti, getExporter("studenti.csv"));
+        export(studenti, getExporter("export.xlsx"));
+
+        Importer importer = new ImportFromCsv();
+        Importer importer2 = new ImportFromExcel();
+
+        Importer importerStudenti = getImporter("studenti.csv");
+        importerStudenti.importStudents("studenti.csv");
+
+        Importer importerNote = getImporter("note.csv");
+        importerNote.importNotes("note.csv");
+
+        Importer importerStudenti1 = getImporter("export.xlsx");
+        importerStudenti.importStudents("export.xlsx");
+
+
+        /*ImportFromExcel importer1 = new ImportFromExcel();
+
+        importer.importStudents("studenti.xlsx");
+        importer.importStudents("note.xlsx");*/
+
+
+        afisareCuNote(studenti, note);
     }
     Map<Integer, List<Integer>> note=citireNote("note.CSV");
 
@@ -129,4 +159,173 @@ public class Application {
         }
         return rezultat;
     }
+    public static void scrieInExcel(String numeFisier,
+                                    List<Student> studenti,
+                                    Map<Integer, List<Integer>> note) {
+
+        Workbook workbook = new XSSFWorkbook();
+        Sheet sheet = workbook.createSheet("Studenti");
+
+        int rowIndex = 0;
+
+        // Header
+        Row header = sheet.createRow(rowIndex++);
+
+        header.createCell(0).setCellValue("Numar Matricol");
+        header.createCell(1).setCellValue("Prenume");
+        header.createCell(2).setCellValue("Nume");
+        header.createCell(3).setCellValue("Grupa");
+        header.createCell(4).setCellValue("Note");
+
+        // Date
+        for (Student s : studenti) {
+
+            Row row = sheet.createRow(rowIndex++);
+
+            row.createCell(0).setCellValue(s.getNumarMatricol());
+            row.createCell(1).setCellValue(s.prenume);
+            row.createCell(2).setCellValue(s.nume);
+            row.createCell(3).setCellValue(s.formatieDeStudiu);
+
+            int id = Integer.parseInt(s.getNumarMatricol());
+
+            List<Integer> listaNote = note.get(id);
+
+            StringBuilder sb = new StringBuilder();
+
+            if (listaNote != null) {
+                for (Integer n : listaNote) {
+                    sb.append(n).append(" ");
+                }
+            }
+
+            row.createCell(4).setCellValue(sb.toString().trim());
+        }
+
+        // Ajusteaza automat coloanele
+        for (int i = 0; i < 5; i++) {
+            sheet.autoSizeColumn(i);
+        }
+
+        try (FileOutputStream fos = new FileOutputStream(numeFisier)) {
+
+            workbook.write(fos);
+            workbook.close();
+
+            System.out.println("Fisier Excel creat cu succes!");
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+    public static void scrieRaportCSV(String numeFisierOut,
+                                      List<Student> studenti,
+                                      Map<Integer, List<Integer>> note) {
+
+        try (BufferedWriter bw = new BufferedWriter(new FileWriter(numeFisierOut))) {
+
+            bw.write("NumarMatricol,Prenume,Nume,Grupa,Note");
+            bw.newLine();
+
+            for (Student s : studenti) {
+
+                int id = Integer.parseInt(s.getNumarMatricol());
+
+                List<Integer> listaNote = note.get(id);
+
+                StringBuilder sb = new StringBuilder();
+
+                if (listaNote != null) {
+                    for (int i = 0; i < listaNote.size(); i++) {
+                        sb.append(listaNote.get(i));
+                        if (i < listaNote.size() - 1) {
+                            sb.append(" ");
+                        }
+                    }
+                }
+
+                bw.write(
+                        s.getNumarMatricol() + "," +
+                                s.prenume + "," +
+                                s.nume + "," +
+                                s.formatieDeStudiu + "," +
+                                sb
+                );
+
+                bw.newLine();
+            }
+
+            System.out.println("CSV generat cu succes!");
+
+        } catch (IOException e) {
+            System.err.println("Eroare la scriere CSV: " + e.getMessage());
+        }
+    }
+    public static Exporter getExporter(String filename) {
+
+        String fileExtension =
+                filename.substring(filename.lastIndexOf(".") + 1);
+
+        switch (fileExtension) {
+
+            case "csv":
+                return new ExportToCsv("export.csv");
+
+            case "xlsx":
+                return new ExportToExcel();
+
+            default:
+                throw new IllegalArgumentException(
+                        "Unknown file extension: " + fileExtension);
+        }
+    }
+
+    public static void export(List<Student> list, Exporter exporter) {
+        exporter.export(list);
+    }
+    public static Importer getImporter(String... args) {
+
+        String file = args[0];
+        String ext = file.substring(file.lastIndexOf(".") + 1);
+
+        switch (ext) {
+
+            case "csv":
+                return new ImportFromCsv();
+
+            case "xlsx":
+                return new ImportFromExcel();
+
+            default:
+                throw new IllegalArgumentException("Unknown format: " + ext);
+        }
+    }
+    public static void importStudents(Importer importer, String file) {
+        importer.importStudents(file);
+    }
+    public static void importNotes(Importer importer, String file) {
+        importer.importNotes(file);
+    }
+    public static void afisareCuNote(List<Student> studenti,
+                                     Map<Integer, List<Integer>> note) {
+
+        for (Student s : studenti) {
+
+            int id = Integer.parseInt(s.getNumarMatricol());
+            List<Integer> listaNote = note.get(id);
+
+            System.out.print(s + " -> ");
+
+            if (listaNote != null) {
+                for (Integer n : listaNote) {
+                    System.out.print(n + " ");
+                }
+            } else {
+                System.out.print("fara note");
+            }
+
+            System.out.println();
+        }
+    }
+
 }
